@@ -98,8 +98,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Adds the top two numbers on the data stack. \\
 *Usage:* `10 20 +` (stack: 30)
 
----
-
 *** 1+ ( n -- n+1 )
 *Description:* Increments the top number on the data stack by 1. \\
 *Usage:* `10 1+` (stack: 11)
@@ -183,8 +181,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *** hex16 ( n -- )
 *Description:* Converts the lower 16 bits of `n` to four hex characters and emits them. Prints the most significant byte first. \\
 *Usage:* `65535 hex16` (prints "FFFF")
-
----
 
 *** hex32 ( n -- )
 *Description:* Converts a 32-bit number `n` to eight hex characters and emits them. Prints the most significant word first. \\
@@ -326,8 +322,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Given an execution token (XT) of a word, it loads the link address from that word's header. The link address points to the XT of the previous word in the dictionary. \\
 *Usage:* `XT wlink@` (pushes the link address of the word XT)
 
----
-
 *** wnlen@ ( xt -- len )
 *Description:* Given an execution token (XT) of a word, it loads the name length from that word's header. \\
 *Usage:* `XT wnlen@` (pushes the name length of the word XT)
@@ -356,8 +350,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Copies the second pair of items (a b) to the top of the stack. \\
 *Usage:* `1 2 3 4 2over` (stack: 1 2 3 4 1 2)
 
----
-
 *** nip ( a b -- b )
 *Description:* Removes the second item from the top of the stack. \\
 *Usage:* `10 20 nip` (stack: 20)
@@ -381,8 +373,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *** ssrst ( -- )
 *Description:* Resets the system status flags (ss) to zero. \\
 *Usage:* `ssrst`
-
----
 
 *** ssdund ( -- flag_mask )
 *Description:* Pushes the bitmask for the data stack underflow flag (ssdund) onto the stack. \\
@@ -440,8 +430,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Checks if the string of `u` characters at `addr` represents a valid hexadecimal number (prefixed with "0x"). Pushes -1 (true) if it is, 0 (false) otherwise. \\
 *Usage:* `S" 0x123" 5 isnumber` (stack: -1) `; S" 123" 3 isnumber` (stack: 0)
 
----
-
 *** lshift ( n1 n2 -- n1<<n2 )
 *Description:* Performs a logical left shift on `n1` by `n2` bits. Pops `n2`, then `n1`, pushes the result. \\
 *Usage:* `1 2 lshift` (stack: 4)
@@ -449,8 +437,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *** 4* ( n -- n*4 )
 *Description:* Multiplies the top number on the stack by 4 (equivalent to a 2-bit left shift). \\
 *Usage:* `10 4*` (stack: 40)
-
----
 
 *** 4/ ( n -- n/4 )
 *Description:* Divides the top number on the stack by 4 (equivalent to a 2-bit right shift). \\
@@ -512,8 +498,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Compiles the number `n` into the dictionary at the current here address and then increments here by cell size. \\
 *Usage:* `123 ,` (compiles 123 into the dictionary)
 
----
-
 *** nlenshift ( -- shift_value )
 *Description:* Pushes the value of nlen_shift (16) onto the stack. This is the bit position where the name length is stored in a word's header. \\
 *Usage:* `nlenshift` (stack: 16)
@@ -546,8 +530,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Defines a new Forth word with the given name (`addr u`). It uses newword to create the dictionary entry, then sets the code field of the new word to point to the call word's entry point. This makes the new word a "colon definition" that will execute a sequence of other Forth words. \\
 *Usage:* `S" MYWORD" 6 defword` (defines MYWORD as a colon definition)
 
----
-
 *** defconst ( addr u -- )
 *Description:* Defines a new Forth constant with the given name (`addr u`). It uses newword to create the dictionary entry, then sets the code field of the new constant to point to the doconst word's entry point. \\
 *Usage:* `S" MYCONST" 7 defconst` (defines MYCONST as a constant)
@@ -578,13 +560,9 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Used in compilation. It compiles a branch0 instruction into the current definition. If the `flag` on the stack (at runtime) is non-zero, execution proceeds to the code immediately following if. If flag is zero, execution jumps to a later address (to be filled by then). This is an immediate word. \\
 *Usage:* `: MYWORD FLAG IF ... THEN ;`
 
----
-
 *** then ( branch_addr -- )
 *Description:* Used in compilation. It fills in the jump address for the preceding if or else word. This is an immediate word. \\
 *Usage:* `: MYWORD FLAG IF ... THEN ;`
-
----
 
 *** begin ( -- loop_addr )
 *Description:* Used in compilation. It pushes the current here address onto the stack. This address marks the beginning of a loop structure. This is an immediate word. \\
@@ -597,8 +575,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *** ' (tick) ( "word" -- xt )
 *Description:* Reads the next word from the input stream and searches for it in the dictionary. If found, it pushes the execution token (XT) of that word onto the stack. If not found, it will likely cause an error (or push 0 depending on error handling). \\
 *Usage:* `' DUP` (pushes the XT of the DUP word)
-
----
 
 *** dogon ( -- )
 *Description:* Turns on the Independent Watchdog (IWDG) timer. This will cause a system reset if the watchdog is not "fed" periodically. \\
@@ -616,13 +592,9 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Disables the SysTick timer. \\
 *Usage:* `systickoff`
 
----
-
 *** mscountl ( -- addr )
 *Description:* Pushes the memory address of the mscountl variable, which stores the lower 32 bits of a millisecond counter. \\
 *Usage:* `mscountl`
-
----
 
 *** mscounth ( -- addr )
 *Description:* Pushes the memory address of the mscounth variable, which stores the upper 32 bits of a millisecond counter. Together with mscountl, this forms a 64-bit millisecond counter. \\
@@ -643,8 +615,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *** motd ( -- )
 *Description:* Prints the "Message of the Day" (a banner with "ITC FORTH on CH32V003 (rv32ec)") to the console. \\
 *Usage:* `motd`
-
----
 
 *** . ( n -- )
 *Description:* Prints the top number `n` on the stack in hexadecimal format (using hex32). \\
@@ -694,8 +664,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Pushes the offset of the Flash Control Register (0x10) relative to FLASH_BASE. \\
 *Usage:* `FLASH_CTLR`
 
----
-
 *** FLASH_PG ( -- bit_mask )
 *Description:* Pushes the bitmask for the Flash Programming bit (bit 0) in the Flash Control Register. \\
 *Usage:* `FLASH_PG`
@@ -720,8 +688,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Stores a 16-bit `value` at the specified `addr`. \\
 *Usage:* `0xABCD ADDR 16!`
 
----
-
 *** romwait ( -- )
 *Description:* Waits until the Flash memory is no longer busy with a programming or erase operation. It uses yield to allow other tasks to run. \\
 *Usage:* `romwait`
@@ -734,7 +700,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Stores a 32-bit `value` at the specified `addr` in Flash memory. It splits the 32-bit value into two 16-bit halves and uses rom16store for each, handling address increments. \\
 *Usage:* `0xDEADBEEF FLASH_ADDR rom32!`
 
----
 
 *** FLASH_ADDR ( -- offset )
 *Description:* Pushes the offset of the Flash Address Register (0x14) relative to FLASH_BASE. \\
@@ -752,7 +717,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Erases a 1KB page in Flash memory starting at the given `addr`. It handles unlocking, setting the erase bit, writing the address, initiating the erase, waiting for completion, and clearing the erase bit. \\
 *Usage:* `PAGE_ADDR rom1kerase`
 
----
 
 *** RAMBAK_ADDR ( -- addr )
 *Description:* Pushes the base address (0x3800) of the dedicated RAM backup area in Flash memory. \\
@@ -778,8 +742,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *Description:* Pushes the current value of the User Pointer (up) onto the data stack. \\
 *Usage:* `up@`
 
----
-
 *** stksize ( -- n )
 *Description:* Pushes the constant value for the size of a data/return stack in cells (20). \\
 *Usage:* `stksize` (stack: 20)
@@ -791,8 +753,6 @@ Documents auto-generated from the assembly source. Please blame AI for any mista
 *** newtask ( xt -- task_addr )
 *Description:* Creates a new task context. It allocates space for data and return stacks, then initializes a new task structure in the dictionary. The `xt` (execution token) provided on the stack is set as the new task's initial instruction pointer. It links the new task into the cooperative multitasking chain. \\
 *Usage:* `XT newtask` (creates a new task that will start executing at XT)
-
----
 
 *** allot ( n -- )
 *Description:* Reserves `n` cells (32-bit words) in the dictionary by incrementing the here pointer. \\
