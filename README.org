@@ -2,6 +2,8 @@
 
 a simple multitask forth on ch32v003
 
+[[DOCS.org][Documents]] auto-generated from the assembly code. It's quite hard to do anything with this Forth if you don't know what the words do.
+
 * build
 
 #+BEGIN_SRC shell
@@ -23,7 +25,10 @@ https://www.wch.cn/downloads/WCH-LinkUtility_ZIP.html
 
 * connect
 
-PD6 provide half-duplex one wire uart
+PD6 provide half-duplex one wire UART
+
+*Edit*: For some reason the 1 wire half-duplex UART works on my board _only_ right after flashing. If I reboot, the UART is not responsive at all.
+I guess something is pulled high/low which prevents it from working. I'll have to investigate.
 
 #+BEGIN_SRC
  _____ _____ _____ _____ _____
