@@ -1,1137 +1,804 @@
-* Forth Words (Dictionary)
+* ch32v003 Forth Words (Dictionary)
 
 Documents auto-generated from the assembly source. Please blame AI for any mistakes 😂
----
 
-*** fail ( \-\- )
-*Description:* Prints "FAIL" to the console and enters an infinite loop, effectively halting execution.
+*** fail ( -- )
+*Description:* Prints "FAIL" to the console and enters an infinite loop, effectively halting execution. \\
 *Usage:* `fail`
 
----
-
-*** okay ( \-\- )
-*Description:* Prints "OK" to the console and enters an infinite loop, effectively halting execution. This word is typically used for debugging or indicating successful completion in a test environment.
+*** okay ( -- )
+*Description:* Prints "OK" to the console and enters an infinite loop, effectively halting execution. This word is typically used for debugging or indicating successful completion in a test environment. \\
 *Usage:* `okay`
 
----
-
-*** next ( \-\- )
-*Description:* The core of the Forth inner interpreter. It fetches the next instruction pointer (wp) from the current instruction stream (ip), increments ip, then jumps to the address stored at `0(wp)` (the word's code field). This initiates the execution of the next Forth word.
+*** next ( -- )
+*Description:* The core of the Forth inner interpreter. It fetches the next instruction pointer (wp) from the current instruction stream (ip), increments ip, then jumps to the address stored at `0(wp)` (the word's code field). This initiates the execution of the next Forth word. \\
 *Usage:* (Internal)
 
----
-
-*** call ( xt \-\- ) (where xt is the execution token of the word to call)
-*Description:* Pushes the current instruction pointer (ip) onto the return stack, calculates the address of the code field (`f_\label`) for the word being called, sets ip to this address, and then nexts to execute the word. This is the mechanism for calling other Forth words. Typically used in compiled Forth definitions.
+*** call ( xt -- ) (where xt is the execution token of the word to call)
+*Description:* Pushes the current instruction pointer (ip) onto the return stack, calculates the address of the code field (`f_\label`) for the word being called, sets ip to this address, and then nexts to execute the word. This is the mechanism for calling other Forth words. Typically used in compiled Forth definitions. \\
 *Usage:* `XT CALL`
 
----
-
-*** exit ( \-\- )
-*Description:* Pops the previous instruction pointer from the return stack and sets ip to this value. Then nexts to continue execution from where the calling word left off. This is equivalent to returning from a subroutine. Used to terminate a Forth definition.
+*** exit ( -- )
+*Description:* Pops the previous instruction pointer from the return stack and sets ip to this value. Then nexts to continue execution from where the calling word left off. This is equivalent to returning from a subroutine. Used to terminate a Forth definition. \\
 *Usage:* (Used at the end of `:` definitions)
 
----
-
-*** noop ( \-\- )
-*Description:* A no-operation word. It simply calls exit, effectively doing nothing and immediately returning. Can be used as a placeholder.
+*** noop ( -- )
+*Description:* A no-operation word. It simply calls exit, effectively doing nothing and immediately returning. Can be used as a placeholder. \\
 *Usage:* `noop`
 
----
-
-*** branch ( \-\- )
-*Description:* Unconditionally jumps to an address. It fetches the next value from the instruction stream (ip), sets ip to this value, and then nexts. Used for unconditional jumps in compiled code, often within control structures like `BEGIN ... AGAIN`.
+*** branch ( -- )
+*Description:* Unconditionally jumps to an address. It fetches the next value from the instruction stream (ip), sets ip to this value, and then nexts. Used for unconditional jumps in compiled code, often within control structures like `BEGIN ... AGAIN`. \\
 *Usage:* (Internal, used by control structures)
 
----
-
-*** branch0 ( flag \-\- )
-*Description:* Conditional jump. It pops a flag from the data stack. If flag is zero, it fetches the next value from the instruction stream (ip), sets ip to this value, and then nexts (jumps). If flag is non-zero, it simply increments ip by addrsize to skip the jump address and nexts. Used for `IF` and `UNTIL` constructs.
+*** branch0 ( flag -- )
+*Description:* Conditional jump. It pops a flag from the data stack. If flag is zero, it fetches the next value from the instruction stream (ip), sets ip to this value, and then nexts (jumps). If flag is non-zero, it simply increments ip by addrsize to skip the jump address and nexts. Used for `IF` and `UNTIL` constructs. \\
 *Usage:* (Internal, used by control structures like `IF`, `UNTIL`)
 
----
-
-*** lit ( \-\- n )
-*Description:* Pushes a literal value `n` onto the data stack. It fetches the next value from the instruction stream (ip), pushes it to the data stack, increments ip, and then nexts. This word is typically compiled when a number is encountered in the input stream.
+*** lit ( -- n )
+*Description:* Pushes a literal value `n` onto the data stack. It fetches the next value from the instruction stream (ip), pushes it to the data stack, increments ip, and then nexts. This word is typically compiled when a number is encountered in the input stream. \\
 *Usage:* (Internal, used by the interpreter to push numbers)
 
----
-
-*** tasksave ( \-\- )
-*Description:* Saves the current task's execution context (IP, SS, SP, ST, RP) into the memory locations pointed to by the current up (User Pointer) based on the task structure offsets. Used for multitasking.
+*** tasksave ( -- )
+*Description:* Saves the current task's execution context (IP, SS, SP, ST, RP) into the memory locations pointed to by the current up (User Pointer) based on the task structure offsets. Used for multitasking. \\
 *Usage:* (Internal, used by multitasking words like yield)
 
----
-
-*** taskload ( \-\- )
-*Description:* Loads a task's execution context (IP, SS, SP, ST, RP) from the memory locations pointed to by the current up (User Pointer) based on the task structure offsets. Used for multitasking.
+*** taskload ( -- )
+*Description:* Loads a task's execution context (IP, SS, SP, ST, RP) from the memory locations pointed to by the current up (User Pointer) based on the task structure offsets. Used for multitasking. \\
 *Usage:* (Internal, used by multitasking words like yield)
 
----
-
-*** yield ( \-\- )
-*Description:* Performs a task switch. It first saves the current task's context using tasksave. Then, it increments ycount (a global yield counter). It loads the tnp (next task pointer) from the current task's context into up, and finally loads the new task's context using taskload, then nexts to resume the new task. This allows for cooperative multitasking.
+*** yield ( -- )
+*Description:* Performs a task switch. It first saves the current task's context using tasksave. Then, it increments ycount (a global yield counter). It loads the tnp (next task pointer) from the current task's context into up, and finally loads the new task's context using taskload, then nexts to resume the new task. This allows for cooperative multitasking. \\
 *Usage:* `yield` (relinquishes control to the next task)
 
----
-
-*** tx? ( \-\- flag )
-*Description:* Checks if the UART transmit buffer is empty and ready to accept a new character. Pushes -1 (true) if ready, 0 (false) otherwise.
+*** tx? ( -- flag )
+*Description:* Checks if the UART transmit buffer is empty and ready to accept a new character. Pushes -1 (true) if ready, 0 (false) otherwise. \\
 *Usage:* `tx?` (e.g., `tx? IF ." Ready" THEN`)
 
----
-
-*** drop ( a \-\- )
-*Description:* Removes the top item from the data stack.
+*** drop ( a -- )
+*Description:* Removes the top item from the data stack. \\
 *Usage:* `10 20 drop` (stack: 10)
 
----
-
-*** dup ( a \-\- a a )
-*Description:* Duplicates the top item on the data stack.
+*** dup ( a -- a a )
+*Description:* Duplicates the top item on the data stack. \\
 *Usage:* `10 dup` (stack: 10 10)
 
----
-
-*** = ( a b \-\- flag )
-*Description:* Compares the top two items on the data stack. Pushes -1 (true) if a equals b, 0 (false) otherwise.
+*** = ( a b -- flag )
+*Description:* Compares the top two items on the data stack. Pushes -1 (true) if a equals b, 0 (false) otherwise. \\
 *Usage:* `10 10 =` (stack: -1) `; 10 20 =` (stack: 0)
 
----
-
-*** 2lit ( \-\- n1 n2 )
-*Description:* Pushes two literal values (n1, then n2) from the instruction stream onto the data stack. This word is typically compiled when two numbers are encountered consecutively in the input stream.
+*** 2lit ( -- n1 n2 )
+*Description:* Pushes two literal values (n1, then n2) from the instruction stream onto the data stack. This word is typically compiled when two numbers are encountered consecutively in the input stream. \\
 *Usage:* (Internal, used by the interpreter to push two numbers)
 
----
-
-*** failez ( flag \-\- )
-*Description:* Pops flag. If flag is zero, it calls fail. Otherwise, it exits. Used for assertions, to halt execution if a condition is false.
+*** failez ( flag -- )
+*Description:* Pops flag. If flag is zero, it calls fail. Otherwise, it exits. Used for assertions, to halt execution if a condition is false. \\
 *Usage:* `0 failez` (will call fail) `; -1 failez` (will exit normally)
 
----
-
-*** failnz ( flag \-\- )
-*Description:* Pops flag. If flag is non-zero, it calls fail. Otherwise, it exits. Used for assertions, to halt execution if a condition is true.
+*** failnz ( flag -- )
+*Description:* Pops flag. If flag is non-zero, it calls fail. Otherwise, it exits. Used for assertions, to halt execution if a condition is true. \\
 *Usage:* `-1 failnz` (will call fail) `; 0 failnz` (will exit normally)
 
----
-
-*** txfill ( char \-\- )
-*Description:* Writes the character from tos to the UART data register for transmission. This word does not wait for the buffer to be ready. It's a low-level transmit.
+*** txfill ( char -- )
+*Description:* Writes the character from tos to the UART data register for transmission. This word does not wait for the buffer to be ready. It's a low-level transmit. \\
 *Usage:* `65 txfill` (transmits 'A' without waiting for completion)
 
----
-
-*** txwait ( \-\- )
-*Description:* Waits for the UART transmit buffer to be ready. It repeatedly yields (allowing other tasks to run) and checks `tx?` until the buffer is available.
+*** txwait ( -- )
+*Description:* Waits for the UART transmit buffer to be ready. It repeatedly yields (allowing other tasks to run) and checks `tx?` until the buffer is available. \\
 *Usage:* `txwait` (pauses execution until UART is ready to transmit)
 
----
-
-*** txc ( char \-\- )
-*Description:* Transmits a character. It first txwaits (for the buffer to be ready), then txfills the character, and then txwaits again (for transmission to complete). Ensures reliable character transmission.
+*** txc ( char -- )
+*Description:* Transmits a character. It first txwaits (for the buffer to be ready), then txfills the character, and then txwaits again (for transmission to complete). Ensures reliable character transmission. \\
 *Usage:* `65 txc` (transmits 'A' and waits for it to be sent)
 
----
-
-*** emit ( char \-\- )
-*Description:* An alias for txc. Prints a single character to the console.
+*** emit ( char -- )
+*Description:* An alias for txc. Prints a single character to the console. \\
 *Usage:* `65 emit` (prints 'A')
 
----
-
-*** + ( n1 n2 \-\- sum )
-*Description:* Adds the top two numbers on the data stack.
+*** + ( n1 n2 -- sum )
+*Description:* Adds the top two numbers on the data stack. \\
 *Usage:* `10 20 +` (stack: 30)
 
 ---
 
-*** 1+ ( n \-\- n+1 )
-*Description:* Increments the top number on the data stack by 1.
+*** 1+ ( n -- n+1 )
+*Description:* Increments the top number on the data stack by 1. \\
 *Usage:* `10 1+` (stack: 11)
 
----
-
-*** - ( n1 n2 \-\- difference )
-*Description:* Subtracts the second number (n2) from the first (n1) on the data stack.
+*** - ( n1 n2 -- difference )
+*Description:* Subtracts the second number (n2) from the first (n1) on the data stack. \\
 *Usage:* `20 10 -` (stack: 10)
 
----
-
-*** 1- ( n \-\- n-1 )
-*Description:* Decrements the top number on the data stack by 1.
+*** 1- ( n -- n-1 )
+*Description:* Decrements the top number on the data stack by 1. \\
 *Usage:* `10 1-` (stack: 9)
 
----
-
-*** c@ ( addr \-\- byte )
-*Description:* Loads a single byte from the memory address specified on the top of the stack.
+*** c@ ( addr -- byte )
+*Description:* Loads a single byte from the memory address specified on the top of the stack. \\
 *Usage:* `ADDR c@` (loads the byte at ADDR)
 
----
-
-*** 2drop ( a b \-\- )
-*Description:* Removes the top two items from the data stack.
+*** 2drop ( a b -- )
+*Description:* Removes the top two items from the data stack. \\
 *Usage:* `1 2 3 2drop` (stack: 1)
 
----
-
-*** swap ( a b \-\- b a )
-*Description:* Swaps the positions of the top two items on the data stack.
+*** swap ( a b -- b a )
+*Description:* Swaps the positions of the top two items on the data stack. \\
 *Usage:* `10 20 swap` (stack: 20 10)
 
----
-
-*** type ( addr u \-\- )
-*Description:* Prints a string of `u` characters starting from `addr`. It iterates, emitting each character.
+*** type ( addr u -- )
+*Description:* Prints a string of `u` characters starting from `addr`. It iterates, emitting each character. \\
 *Usage:* `S" Hello" 5 type` (prints "Hello")
 
----
-
-*** st@ ( \-\- addr )
-*Description:* Pushes the address of the data stack limit (st) onto the data stack. This is the highest valid address for the data stack.
+*** st@ ( -- addr )
+*Description:* Pushes the address of the data stack limit (st) onto the data stack. This is the highest valid address for the data stack. \\
 *Usage:* `st@` (pushes the data stack limit address)
 
----
-
-*** sp@ ( \-\- addr )
-*Description:* Pushes the current data stack pointer (sp) onto the data stack. This is the address of the top of the data stack.
+*** sp@ ( -- addr )
+*Description:* Pushes the current data stack pointer (sp) onto the data stack. This is the address of the top of the data stack. \\
 *Usage:* `sp@` (pushes the current data stack pointer)
 
----
-
-*** doconst ( \-\- value )
-*Description:* This is the runtime code for a Forth constant. When a constant word is executed, it calculates the address of the constant's value (which immediately follows its code field in memory) and pushes that value onto the data stack. This word is not meant for direct user interaction, but is the underlying implementation for words defined with `CONSTANT`.
+*** doconst ( -- value )
+*Description:* This is the runtime code for a Forth constant. When a constant word is executed, it calculates the address of the constant's value (which immediately follows its code field in memory) and pushes that value onto the data stack. This word is not meant for direct user interaction, but is the underlying implementation for words defined with `CONSTANT`. \\
 *Usage:* (Internal, used by `CONSTANT` definitions)
 
----
-
-*** cell ( \-\- n )
-*Description:* Pushes the value of addrsize (which is 4 for RV32) onto the data stack. Represents the size of a Forth cell/word in bytes.
+*** cell ( -- n )
+*Description:* Pushes the value of addrsize (which is 4 for RV32) onto the data stack. Represents the size of a Forth cell/word in bytes. \\
 *Usage:* `cell` (stack: 4)
 
----
-
-*** dzchk ( \-\- )
-*Description:* "Data Zero Check". Checks if the data stack pointer (sp) is equal to the stack limit (st) and if the ssdund (stack underflow) flag is clear. If either condition is false, it calls fail. Used for stack integrity checks, often at the end of test sequences.
+*** dzchk ( -- )
+*Description:* "Data Zero Check". Checks if the data stack pointer (sp) is equal to the stack limit (st) and if the ssdund (stack underflow) flag is clear. If either condition is false, it calls fail. Used for stack integrity checks, often at the end of test sequences. \\
 *Usage:* `dzchk` (checks stack integrity, calls fail on error)
 
----
-
-*** rshift ( n1 n2 \-\- n1>>n2 )
-*Description:* Performs a logical right shift on `n1` by `n2` bits. Pops `n2`, then `n1`, pushes the result.
+*** rshift ( n1 n2 -- n1>>n2 )
+*Description:* Performs a logical right shift on `n1` by `n2` bits. Pops `n2`, then `n1`, pushes the result. \\
 *Usage:* `8 2 rshift` (stack: 2)
 
----
-
-*** 2/ ( n \-\- n/2 )
-*Description:* Divides the top number on the stack by 2 (equivalent to a 1-bit logical right shift).
+*** 2/ ( n -- n/2 )
+*Description:* Divides the top number on the stack by 2 (equivalent to a 1-bit logical right shift). \\
 *Usage:* `10 2/` (stack: 5)
 
----
-
-*** cell/ ( n \-\- n/addrsize )
-*Description:* Divides the top number on the stack by addrsize (4 for RV32), effectively converting a byte offset to a cell offset.
+*** cell/ ( n -- n/addrsize )
+*Description:* Divides the top number on the stack by addrsize (4 for RV32), effectively converting a byte offset to a cell offset. \\
 *Usage:* `8 cell/` (stack: 2)
 
----
-
-*** depth ( \-\- n )
-*Description:* Pushes the number of items currently on the data stack. Calculated as `(st - sp) / addrsize`.
+*** depth ( -- n )
+*Description:* Pushes the number of items currently on the data stack. Calculated as `(st - sp) / addrsize`. \\
 *Usage:* `10 20 depth` (stack: 10 20 2)
 
----
-
-*** and ( n1 n2 \-\- n1&n2 )
-*Description:* Performs a bitwise AND operation on the top two numbers.
+*** and ( n1 n2 -- n1&n2 )
+*Description:* Performs a bitwise AND operation on the top two numbers. \\
 *Usage:* `5 3 and` (binary 101 AND 011 = 001, stack: 1)
 
----
-
-*** num2hex ( n \-\- char )
-*Description:* Converts the lower 4 bits of `n` into its corresponding ASCII hexadecimal character ('0'-'9', 'A'-'F').
+*** num2hex ( n -- char )
+*Description:* Converts the lower 4 bits of `n` into its corresponding ASCII hexadecimal character ('0'-'9', 'A'-'F'). \\
 *Usage:* `10 num2hex` (stack: 65 (ASCII 'A'))
 
----
-
-*** hex4 ( n \-\- )
-*Description:* Converts the lower 4 bits of `n` to a hex character and emits it.
+*** hex4 ( n -- )
+*Description:* Converts the lower 4 bits of `n` to a hex character and emits it. \\
 *Usage:* `15 hex4` (prints 'F')
 
----
-
-*** hex8 ( n \-\- )
-*Description:* Converts the lower 8 bits of `n` to two hex characters and emits them. Prints the upper nibble then the lower nibble.
+*** hex8 ( n -- )
+*Description:* Converts the lower 8 bits of `n` to two hex characters and emits them. Prints the upper nibble then the lower nibble. \\
 *Usage:* `255 hex8` (prints "FF")
 
----
-
-*** hex16 ( n \-\- )
-*Description:* Converts the lower 16 bits of `n` to four hex characters and emits them. Prints the most significant byte first.
+*** hex16 ( n -- )
+*Description:* Converts the lower 16 bits of `n` to four hex characters and emits them. Prints the most significant byte first. \\
 *Usage:* `65535 hex16` (prints "FFFF")
 
 ---
 
-*** hex32 ( n \-\- )
-*Description:* Converts a 32-bit number `n` to eight hex characters and emits them. Prints the most significant word first.
+*** hex32 ( n -- )
+*Description:* Converts a 32-bit number `n` to eight hex characters and emits them. Prints the most significant word first. \\
 *Usage:* `0xDEADBEEF hex32` (prints "DEADBEEF")
 
----
-
-*** @ ( addr \-\- value )
-*Description:* Loads a 32-bit value (a cell) from the memory address specified on the top of the stack.
+*** @ ( addr -- value )
+*Description:* Loads a 32-bit value (a cell) from the memory address specified on the top of the stack. \\
 *Usage:* `ADDR @` (loads the 32-bit value at ADDR)
 
----
-
-*** .s ( \-\- )
-*Description:* Dumps the current contents of the data stack to the console, showing the depth and each value in hexadecimal. Useful for debugging.
+*** .s ( -- )
+*Description:* Dumps the current contents of the data stack to the console, showing the depth and each value in hexadecimal. Useful for debugging. \\
 *Usage:* `10 20 .s` (might print `(2) 00000014 0000000A`)
 
----
-
-*** rx? ( \-\- flag )
-*Description:* Checks if a character is available in the UART receive buffer. Pushes -1 (true) if a character is available, 0 (false) otherwise.
+*** rx? ( -- flag )
+*Description:* Checks if a character is available in the UART receive buffer. Pushes -1 (true) if a character is available, 0 (false) otherwise. \\
 *Usage:* `rx? IF ." Char available" THEN`
 
----
-
-*** rxwait ( \-\- )
-*Description:* Waits for a character to be available in the UART receive buffer. It repeatedly yields and checks `rx?` until a character is ready.
+*** rxwait ( -- )
+*Description:* Waits for a character to be available in the UART receive buffer. It repeatedly yields and checks `rx?` until a character is ready. \\
 *Usage:* `rxwait` (pauses execution until a character is received)
 
----
-
-*** rxread ( \-\- char )
-*Description:* Reads a character from the UART data register. This word does not wait for a character to be available.
+*** rxread ( -- char )
+*Description:* Reads a character from the UART data register. This word does not wait for a character to be available. \\
 *Usage:* `rxread` (reads a character, assuming one is available)
 
----
-
-*** rxc ( \-\- char )
-*Description:* Reads a character from the UART. It first rxwaits for a character to be available, then rxreads it. Ensures reliable character reception.
+*** rxc ( -- char )
+*Description:* Reads a character from the UART. It first rxwaits for a character to be available, then rxreads it. Ensures reliable character reception. \\
 *Usage:* `rxc` (reads a character and waits for it if necessary)
 
----
-
-*** key ( \-\- char )
-*Description:* An alias for rxc. Reads a single character from the console.
+*** key ( -- char )
+*Description:* An alias for rxc. Reads a single character from the console. \\
 *Usage:* `key` (waits for and returns a character from input)
 
----
-
-*** or ( n1 n2 \-\- n1|n2 )
-*Description:* Performs a bitwise OR operation on the top two numbers.
+*** or ( n1 n2 -- n1|n2 )
+*Description:* Performs a bitwise OR operation on the top two numbers. \\
 *Usage:* `5 3 or` (binary 101 OR 011 = 111, stack: 7)
 
----
-
-*** isnl ( char \-\- flag )
-*Description:* Checks if the character is a newline (`\n`) or carriage return (`\r`). Pushes -1 (true) if it is, 0 (false) otherwise.
+*** isnl ( char -- flag )
+*Description:* Checks if the character is a newline (`\n`) or carriage return (`\r`). Pushes -1 (true) if it is, 0 (false) otherwise. \\
 *Usage:* `10 isnl` (stack: -1) `; 65 isnl` (stack: 0)
 
----
-
-*** isdel ( char \-\- flag )
-*Description:* Checks if the character is a backspace (`\b`) or ASCII DEL (0x7F). Pushes -1 (true) if it is, 0 (false) otherwise.
+*** isdel ( char -- flag )
+*Description:* Checks if the character is a backspace (`\b`) or ASCII DEL (0x7F). Pushes -1 (true) if it is, 0 (false) otherwise. \\
 *Usage:* `8 isdel` (stack: -1) `; 127 isdel` (stack: -1)
 
----
-
-*** tib ( \-\- addr )
-*Description:* Pushes the memory address of the Terminal Input Buffer (TIB). The TIB is where user input is stored.
+*** tib ( -- addr )
+*Description:* Pushes the memory address of the Terminal Input Buffer (TIB). The TIB is where user input is stored. \\
 *Usage:* `tib` (pushes the TIB address)
 
----
-
-*** >in ( \-\- addr )
-*Description:* Pushes the memory address of the toin variable. This variable holds the current offset within the TIB, indicating where the next character to be processed is located.
+*** >in ( -- addr )
+*Description:* Pushes the memory address of the toin variable. This variable holds the current offset within the TIB, indicating where the next character to be processed is located. \\
 *Usage:* `>in` (pushes the address of the >in pointer)
 
----
-
-*** inrom ( addr \-\- flag )
-*Description:* Checks if the given address `addr` falls within the defined ROM base and end addresses. Pushes -1 (true) if it's in ROM, 0 (false) otherwise.
+*** inrom ( addr -- flag )
+*Description:* Checks if the given address `addr` falls within the defined ROM base and end addresses. Pushes -1 (true) if it's in ROM, 0 (false) otherwise. \\
 *Usage:* `0x08000000 inrom` (stack: -1)
 
----
-
-*** ! ( value addr \-\- )
-*Description:* Stores a 32-bit `value` at the specified `addr`. It checks if the address is in ROM; if so, it uses rom32store, otherwise it uses mem32store.
+*** ! ( value addr -- )
+*Description:* Stores a 32-bit `value` at the specified `addr`. It checks if the address is in ROM; if so, it uses rom32store, otherwise it uses mem32store. \\
 *Usage:* `1234 ADDR !` (stores 1234 at ADDR)
 
----
-
-*** mem32! ( value addr \-\- )
-*Description:* Stores a 32-bit `value` at the specified `addr` in RAM. This is a direct memory store.
+*** mem32! ( value addr -- )
+*Description:* Stores a 32-bit `value` at the specified `addr` in RAM. This is a direct memory store. \\
 *Usage:* `1234 RAM_ADDR mem32!`
 
----
-
-*** >inchk ( \-\- flag )
-*Description:* Checks if the current >in pointer is within the valid bounds of the Terminal Input Buffer (TIB). Pushes -1 (true) if valid, 0 (false) if out of bounds.
+*** >inchk ( -- flag )
+*Description:* Checks if the current >in pointer is within the valid bounds of the Terminal Input Buffer (TIB). Pushes -1 (true) if valid, 0 (false) if out of bounds. \\
 *Usage:* `>inchk` (checks if >in is valid)
 
----
-
-*** >inrst ( \-\- )
-*Description:* Resets the >in pointer to 0, effectively pointing to the beginning of the Terminal Input Buffer. This prepares the TIB for new input.
+*** >inrst ( -- )
+*Description:* Resets the >in pointer to 0, effectively pointing to the beginning of the Terminal Input Buffer. This prepares the TIB for new input. \\
 *Usage:* `>inrst`
 
----
-
-*** >in@ ( \-\- offset )
-*Description:* Loads the current value (offset) from the >in variable onto the stack.
+*** >in@ ( -- offset )
+*Description:* Loads the current value (offset) from the >in variable onto the stack. \\
 *Usage:* `>in@` (pushes the current offset within TIB)
 
----
-
-*** c! ( byte addr \-\- )
-*Description:* Stores a single `byte` at the specified `addr` in memory.
+*** c! ( byte addr -- )
+*Description:* Stores a single `byte` at the specified `addr` in memory. \\
 *Usage:* `65 ADDR c!` (stores ASCII 'A' at ADDR)
 
----
-
-*** tipush ( char \-\- )
-*Description:* Pushes a `character` onto the Terminal Input Buffer (TIB) at the current >in position and then increments >in. If the TIB is full, it drops the character.
+*** tipush ( char -- )
+*Description:* Pushes a `character` onto the Terminal Input Buffer (TIB) at the current >in position and then increments >in. If the TIB is full, it drops the character. \\
 *Usage:* `65 tipush` (adds 'A' to the TIB)
 
----
-
-*** tidrop ( \-\- )
-*Description:* Decrements the >in pointer, effectively "dropping" the last character from the TIB. It checks if >in is valid before decrementing.
+*** tidrop ( -- )
+*Description:* Decrements the >in pointer, effectively "dropping" the last character from the TIB. It checks if >in is valid before decrementing. \\
 *Usage:* `tidrop` (removes the last character from TIB)
 
----
-
-*** cr ( \-\- )
-*Description:* Prints a carriage return (`\r`) and a newline (`\n`) to the console, moving the cursor to the beginning of the next line.
+*** cr ( -- )
+*Description:* Prints a carriage return (`\r`) and a newline (`\n`) to the console, moving the cursor to the beginning of the next line. \\
 *Usage:* `cr`
 
----
-
-*** token ( \-\- char )
-*Description:* Reads characters from the input stream (via key), processes backspaces and newlines, and accumulates them into the TIB until a space, newline, or carriage return is encountered. It returns the last character processed (which caused the token to end).
+*** token ( -- char )
+*Description:* Reads characters from the input stream (via key), processes backspaces and newlines, and accumulates them into the TIB until a space, newline, or carriage return is encountered. It returns the last character processed (which caused the token to end). \\
 *Usage:* `token` (reads a word from input into TIB)
 
----
-
-*** true ( \-\- -1 )
-*Description:* Pushes the Forth boolean true value (-1) onto the data stack.
+*** true ( -- -1 )
+*Description:* Pushes the Forth boolean true value (-1) onto the data stack. \\
 *Usage:* `true` (stack: -1)
 
----
-
-*** false ( \-\- 0 )
-*Description:* Pushes the Forth boolean false value (0) onto the data stack.
+*** false ( -- 0 )
+*Description:* Pushes the Forth boolean false value (0) onto the data stack. \\
 *Usage:* `false` (stack: 0)
 
----
-
-*** min ( n1 n2 \-\- min(n1, n2) )
-*Description:* Compares `n1` and `n2` and pushes the smaller of the two onto the stack.
+*** min ( n1 n2 -- min(n1, n2) )
+*Description:* Compares `n1` and `n2` and pushes the smaller of the two onto the stack. \\
 *Usage:* `10 20 min` (stack: 10)
 
----
-
-*** >r ( a \-\- ) (moves a from data stack to return stack)
-*Description:* Moves the top item from the data stack to the return stack.
+*** >r ( a -- ) (moves a from data stack to return stack)
+*Description:* Moves the top item from the data stack to the return stack. \\
 *Usage:* `10 >r` (data stack empty, return stack: 10)
 
----
-
-*** r> ( \-\- a ) (moves a from return stack to data stack)
-*Description:* Moves the top item from the return stack to the data stack.
+*** r> ( -- a ) (moves a from return stack to data stack)
+*Description:* Moves the top item from the return stack to the data stack. \\
 *Usage:* `>r r>` (moves value to return stack then back to data stack)
 
----
-
-*** rot ( a b c \-\- b c a )
-*Description:* Rotates the top three items on the data stack. The third item becomes the top.
+*** rot ( a b c -- b c a )
+*Description:* Rotates the top three items on the data stack. The third item becomes the top. \\
 *Usage:* `1 2 3 rot` (stack: 2 3 1)
 
----
-
-*** compare ( addr1 u1 addr2 u2 \-\- flag )
-*Description:* Compares two strings. Pops `u2`, `addr2`, `u1`, `addr1`. Compares `u1` characters from `addr1` with `u2` characters from `addr2`. Pushes -1 (true) if they are identical up to the minimum length, 0 (false) otherwise.
+*** compare ( addr1 u1 addr2 u2 -- flag )
+*Description:* Compares two strings. Pops `u2`, `addr2`, `u1`, `addr1`. Compares `u1` characters from `addr1` with `u2` characters from `addr2`. Pushes -1 (true) if they are identical up to the minimum length, 0 (false) otherwise. \\
 *Usage:* `S" ABC" 3 S" ABD" 3 compare` (stack: 0) `; S" ABC" 3 S" ABC" 3 compare` (stack: -1)
 
----
-
-*** latest ( \-\- addr )
-*Description:* Pushes the memory address of the latest variable. This variable stores the execution token (XT) of the most recently defined Forth word, forming the head of the dictionary linked list.
+*** latest ( -- addr )
+*Description:* Pushes the memory address of the latest variable. This variable stores the execution token (XT) of the most recently defined Forth word, forming the head of the dictionary linked list. \\
 *Usage:* `latest` (pushes the address of the latest pointer)
 
----
-
-*** latest@ ( \-\- xt )
-*Description:* Loads the execution token (XT) of the most recently defined Forth word from the latest variable.
+*** latest@ ( -- xt )
+*Description:* Loads the execution token (XT) of the most recently defined Forth word from the latest variable. \\
 *Usage:* `latest@` (pushes the XT of the last defined word)
 
----
-
-*** latest! ( xt \-\- )
-*Description:* Stores an execution token (XT) into the latest variable, effectively making it the new head of the dictionary. Used when defining new words.
+*** latest! ( xt -- )
+*Description:* Stores an execution token (XT) into the latest variable, effectively making it the new head of the dictionary. Used when defining new words. \\
 *Usage:* `NEW_XT latest!`
 
----
-
-*** wlink@ ( xt \-\- link_addr )
-*Description:* Given an execution token (XT) of a word, it loads the link address from that word's header. The link address points to the XT of the previous word in the dictionary.
+*** wlink@ ( xt -- link_addr )
+*Description:* Given an execution token (XT) of a word, it loads the link address from that word's header. The link address points to the XT of the previous word in the dictionary. \\
 *Usage:* `XT wlink@` (pushes the link address of the word XT)
 
 ---
 
-*** wnlen@ ( xt \-\- len )
-*Description:* Given an execution token (XT) of a word, it loads the name length from that word's header.
+*** wnlen@ ( xt -- len )
+*Description:* Given an execution token (XT) of a word, it loads the name length from that word's header. \\
 *Usage:* `XT wnlen@` (pushes the name length of the word XT)
 
----
-
-*** wname@ ( xt \-\- addr )
-*Description:* Given an execution token (XT) of a word, it calculates and pushes the memory address of that word's name string.
+*** wname@ ( xt -- addr )
+*Description:* Given an execution token (XT) of a word, it calculates and pushes the memory address of that word's name string. \\
 *Usage:* `XT wname@` (pushes the address of the word's name)
 
----
-
-*** over ( a b \-\- a b a )
-*Description:* Copies the second item on the stack to the top of the stack.
+*** over ( a b -- a b a )
+*Description:* Copies the second item on the stack to the top of the stack. \\
 *Usage:* `10 20 over` (stack: 10 20 10)
 
----
-
-*** words ( \-\- )
-*Description:* Lists all the words currently in the Forth dictionary to the console. It traverses the dictionary linked list using latestload, wlinkload, wnameload, and wnlenload, printing each word's name.
+*** words ( -- )
+*Description:* Lists all the words currently in the Forth dictionary to the console. It traverses the dictionary linked list using latestload, wlinkload, wnameload, and wnlenload, printing each word's name. \\
 *Usage:* `words` (prints the dictionary)
 
----
-
-*** 2dup ( a b \-\- a b a b )
-*Description:* Duplicates the top two items on the data stack.
+*** 2dup ( a b -- a b a b )
+*Description:* Duplicates the top two items on the data stack. \\
 *Usage:* `1 2 2dup` (stack: 1 2 1 2)
 
----
-
-*** 2swap ( a b c d \-\- c d a b )
-*Description:* Swaps the top pair of items with the second pair of items on the data stack.
+*** 2swap ( a b c d -- c d a b )
+*Description:* Swaps the top pair of items with the second pair of items on the data stack. \\
 *Usage:* `1 2 3 4 2swap` (stack: 3 4 1 2)
 
----
-
-*** 2over ( a b c d \-\- a b c d a b )
-*Description:* Copies the second pair of items (a b) to the top of the stack.
+*** 2over ( a b c d -- a b c d a b )
+*Description:* Copies the second pair of items (a b) to the top of the stack. \\
 *Usage:* `1 2 3 4 2over` (stack: 1 2 3 4 1 2)
 
 ---
 
-*** nip ( a b \-\- b )
-*Description:* Removes the second item from the top of the stack.
+*** nip ( a b -- b )
+*Description:* Removes the second item from the top of the stack. \\
 *Usage:* `10 20 nip` (stack: 20)
 
----
-
-*** find ( addr u \-\- xt | 0 )
-*Description:* Searches the dictionary for a word matching the string (`addr u`) on the stack. If found, it pushes the execution token (XT) of the word. If not found, it will likely cause an error (or push 0 depending on error handling).
+*** find ( addr u -- xt | 0 )
+*Description:* Searches the dictionary for a word matching the string (`addr u`) on the stack. If found, it pushes the execution token (XT) of the word. If not found, it will likely cause an error (or push 0 depending on error handling). \\
 *Usage:* `S" DUP" 3 find` (pushes XT of DUP if found, else 0)
 
----
-
-*** execute ( xt \-\- )
-*Description:* Pops an execution token (XT) from the stack and executes the corresponding Forth word.
+*** execute ( xt -- )
+*Description:* Pops an execution token (XT) from the stack and executes the corresponding Forth word. \\
 *Usage:* `XT execute` (executes the word pointed to by XT)
 
----
-
-*** ss@ ( \-\- flags )
-*Description:* Pushes the current value of the system status flags (ss) onto the data stack.
+*** ss@ ( -- flags )
+*Description:* Pushes the current value of the system status flags (ss) onto the data stack. \\
 *Usage:* `ss@` (pushes the system status flags)
 
----
-
-*** ss! ( flags \-\- )
-*Description:* Sets the system status flags (ss) to the value popped from the data stack.
+*** ss! ( flags -- )
+*Description:* Sets the system status flags (ss) to the value popped from the data stack. \\
 *Usage:* `NEW_FLAGS ss!`
 
----
-
-*** ssrst ( \-\- )
-*Description:* Resets the system status flags (ss) to zero.
+*** ssrst ( -- )
+*Description:* Resets the system status flags (ss) to zero. \\
 *Usage:* `ssrst`
 
 ---
 
-*** ssdund ( \-\- flag_mask )
-*Description:* Pushes the bitmask for the data stack underflow flag (ssdund) onto the stack.
+*** ssdund ( -- flag_mask )
+*Description:* Pushes the bitmask for the data stack underflow flag (ssdund) onto the stack. \\
 *Usage:* `ssdund` (stack: 2)
 
----
-
-*** xor ( n1 n2 \-\- n1^n2 )
-*Description:* Performs a bitwise XOR operation on the top two numbers.
+*** xor ( n1 n2 -- n1^n2 )
+*Description:* Performs a bitwise XOR operation on the top two numbers. \\
 *Usage:* `5 3 xor` (binary 101 XOR 011 = 110, stack: 6)
 
----
-
-*** invert ( n \-\- ~n )
-*Description:* Performs a bitwise NOT (inversion) on the top number.
+*** invert ( n -- ~n )
+*Description:* Performs a bitwise NOT (inversion) on the top number. \\
 *Usage:* `0 invert` (stack: -1) `; 1 invert` (stack: -2)
 
----
-
-*** <> ( n1 n2 \-\- flag )
-*Description:* Checks if `n1` is not equal to `n2`. Pushes -1 (true) if they are not equal, 0 (false) otherwise.
+*** <> ( n1 n2 -- flag )
+*Description:* Checks if `n1` is not equal to `n2`. Pushes -1 (true) if they are not equal, 0 (false) otherwise. \\
 *Usage:* `10 20 <>` (stack: -1) `; 10 10 <>` (stack: 0)
 
----
-
-*** 0= ( n \-\- flag )
-*Description:* Checks if `n` is equal to zero. Pushes -1 (true) if zero, 0 (false) otherwise.
+*** 0= ( n -- flag )
+*Description:* Checks if `n` is equal to zero. Pushes -1 (true) if zero, 0 (false) otherwise. \\
 *Usage:* `0 0=` (stack: -1) `; 5 0=` (stack: 0)
 
----
-
-*** ssdchk ( \-\- flag )
-*Description:* Checks if the ssdund (data stack underflow) flag in ss is not set. Pushes -1 (true) if no underflow, 0 (false) if underflow occurred. This is a check for stack integrity.
+*** ssdchk ( -- flag )
+*Description:* Checks if the ssdund (data stack underflow) flag in ss is not set. Pushes -1 (true) if no underflow, 0 (false) if underflow occurred. This is a check for stack integrity. \\
 *Usage:* `ssdchk` (checks if stack underflow occurred)
 
----
-
-*** sprst ( \-\- )
-*Description:* Resets the data stack pointer (sp) to the data stack limit (st), effectively clearing the data stack.
+*** sprst ( -- )
+*Description:* Resets the data stack pointer (sp) to the data stack limit (st), effectively clearing the data stack. \\
 *Usage:* `sprst` (clears the data stack)
 
----
-
-*** < ( n1 n2 \-\- flag )
-*Description:* Checks if `n1` is less than `n2`. Pushes -1 (true) if `n1 < n2`, 0 (false) otherwise.
+*** < ( n1 n2 -- flag )
+*Description:* Checks if `n1` is less than `n2`. Pushes -1 (true) if `n1 < n2`, 0 (false) otherwise. \\
 *Usage:* `10 20 <` (stack: -1) `; 20 10 <` (stack: 0)
 
----
-
-*** > ( n1 n2 \-\- flag )
-*Description:* Checks if `n1` is greater than `n2`. Pushes -1 (true) if `n1 > n2`, 0 (false) otherwise.
+*** > ( n1 n2 -- flag )
+*Description:* Checks if `n1` is greater than `n2`. Pushes -1 (true) if `n1 > n2`, 0 (false) otherwise. \\
 *Usage:* `20 10 >` (stack: -1) `; 10 20 >` (stack: 0)
 
----
-
-*** >= ( n1 n2 \-\- flag )
-*Description:* Checks if `n1` is greater than or equal to `n2`. Pushes -1 (true) if `n1 >= n2`, 0 (false) otherwise.
+*** >= ( n1 n2 -- flag )
+*Description:* Checks if `n1` is greater than or equal to `n2`. Pushes -1 (true) if `n1 >= n2`, 0 (false) otherwise. \\
 *Usage:* `20 10 >=` (stack: -1) `; 10 10 >=` (stack: -1) `; 10 20 >=` (stack: 0)
 
----
-
-*** <= ( n1 n2 \-\- flag )
-*Description:* Checks if `n1` is less than or equal to `n2`. Pushes -1 (true) if `n1 <= n2`, 0 (false) otherwise.
+*** <= ( n1 n2 -- flag )
+*Description:* Checks if `n1` is less than or equal to `n2`. Pushes -1 (true) if `n1 <= n2`, 0 (false) otherwise. \\
 *Usage:* `10 20 <=` (stack: -1) `; 10 10 <=` (stack: -1) `; 20 10 <=` (stack: 0)
 
----
-
-*** within ( n low high \-\- flag )
-*Description:* Checks if `n` is within the range `[low, high)`. Pushes -1 (true) if `low <= n < high`, 0 (false) otherwise.
+*** within ( n low high -- flag )
+*Description:* Checks if `n` is within the range `[low, high)`. Pushes -1 (true) if `low <= n < high`, 0 (false) otherwise. \\
 *Usage:* `5 1 10 within` (stack: -1) `; 10 1 10 within` (stack: 0)
 
----
-
-*** isxdigit ( char \-\- flag )
-*Description:* Checks if the character is a hexadecimal digit ('0'-'9', 'A'-'F'). Pushes -1 (true) if it is, 0 (false) otherwise.
+*** isxdigit ( char -- flag )
+*Description:* Checks if the character is a hexadecimal digit ('0'-'9', 'A'-'F'). Pushes -1 (true) if it is, 0 (false) otherwise. \\
 *Usage:* `65 isxdigit` (ASCII 'A', stack: -1) `; 50 isxdigit` (ASCII '2', stack: -1)
 
----
-
-*** isnumber ( addr u \-\- flag )
-*Description:* Checks if the string of `u` characters at `addr` represents a valid hexadecimal number (prefixed with "0x"). Pushes -1 (true) if it is, 0 (false) otherwise.
+*** isnumber ( addr u -- flag )
+*Description:* Checks if the string of `u` characters at `addr` represents a valid hexadecimal number (prefixed with "0x"). Pushes -1 (true) if it is, 0 (false) otherwise. \\
 *Usage:* `S" 0x123" 5 isnumber` (stack: -1) `; S" 123" 3 isnumber` (stack: 0)
 
 ---
 
-*** lshift ( n1 n2 \-\- n1<<n2 )
-*Description:* Performs a logical left shift on `n1` by `n2` bits. Pops `n2`, then `n1`, pushes the result.
+*** lshift ( n1 n2 -- n1<<n2 )
+*Description:* Performs a logical left shift on `n1` by `n2` bits. Pops `n2`, then `n1`, pushes the result. \\
 *Usage:* `1 2 lshift` (stack: 4)
 
----
-
-*** 4* ( n \-\- n*4 )
-*Description:* Multiplies the top number on the stack by 4 (equivalent to a 2-bit left shift).
+*** 4* ( n -- n*4 )
+*Description:* Multiplies the top number on the stack by 4 (equivalent to a 2-bit left shift). \\
 *Usage:* `10 4*` (stack: 40)
 
 ---
 
-*** 4/ ( n \-\- n/4 )
-*Description:* Divides the top number on the stack by 4 (equivalent to a 2-bit right shift).
+*** 4/ ( n -- n/4 )
+*Description:* Divides the top number on the stack by 4 (equivalent to a 2-bit right shift). \\
 *Usage:* `40 4/` (stack: 10)
 
----
-
-*** hex2num ( char \-\- n )
-*Description:* Converts an ASCII hexadecimal character ('0'-'9', 'A'-'F') into its corresponding numeric value (0-15).
+*** hex2num ( char -- n )
+*Description:* Converts an ASCII hexadecimal character ('0'-'9', 'A'-'F') into its corresponding numeric value (0-15). \\
 *Usage:* `65 hex2num` (ASCII 'A', stack: 10)
 
----
-
-*** number ( addr u \-\- n | 0 )
-*Description:* Attempts to convert the hexadecimal string of `u` characters at `addr` into a 32-bit number. The string must be prefixed with "0x". If successful, it pushes the number `n` onto the stack. If the string is not a valid hexadecimal number, it pushes 0.
+*** number ( addr u -- n | 0 )
+*Description:* Attempts to convert the hexadecimal string of `u` characters at `addr` into a 32-bit number. The string must be prefixed with "0x". If successful, it pushes the number `n` onto the stack. If the string is not a valid hexadecimal number, it pushes 0. \\
 *Usage:* `S" 0x1A" 4 number` (stack: 26) `; S" ABC" 3 number` (stack: 0)
 
----
-
-*** sscomp ( \-\- flag_mask )
-*Description:* Pushes the bitmask for the compilation mode flag (sscomp) onto the stack.
+*** sscomp ( -- flag_mask )
+*Description:* Pushes the bitmask for the compilation mode flag (sscomp) onto the stack. \\
 *Usage:* `sscomp` (stack: 1)
 
----
-
-*** bic ( n1 n2 \-\- n1 & (~n2) )
-*Description:* Performs a bitwise "Bit Clear" operation. It clears the bits in `n1` that are set in `n2`. Equivalent to `n1 AND (NOT n2)`.
+*** bic ( n1 n2 -- n1 & (~n2) )
+*Description:* Performs a bitwise "Bit Clear" operation. It clears the bits in `n1` that are set in `n2`. Equivalent to `n1 AND (NOT n2)`. \\
 *Usage:* `7 2 bic` (binary 111 BIC 010 = 101, stack: 5)
 
----
-
-*** ] ( \-\- ) (followed by a name)
-*Description:* Enters compilation mode. It sets the sscomp flag in the system status register (ss). This word is typically used at the beginning of a colon definition (`:`).
+*** ] ( -- ) (followed by a name)
+*Description:* Enters compilation mode. It sets the sscomp flag in the system status register (ss). This word is typically used at the beginning of a colon definition (`:`). \\
 *Usage:* `]` (enters compilation mode)
 
----
-
-*** [ ( \-\- )
-*Description:* Exits compilation mode and enters interpretation mode. It clears the sscomp flag in the system status register (ss). This is an immediate word.
+*** [ ( -- )
+*Description:* Exits compilation mode and enters interpretation mode. It clears the sscomp flag in the system status register (ss). This is an immediate word. \\
 *Usage:* `[` (enters interpretation mode)
 
----
-
-*** 0<> ( n \-\- flag )
-*Description:* Checks if `n` is not equal to zero. Pushes -1 (true) if non-zero, 0 (false) otherwise.
+*** 0<> ( n -- flag )
+*Description:* Checks if `n` is not equal to zero. Pushes -1 (true) if non-zero, 0 (false) otherwise. \\
 *Usage:* `5 0<>` (stack: -1) `; 0 0<>` (stack: 0)
 
----
-
-*** compstat ( \-\- flag )
-*Description:* Checks the current compilation status. Pushes -1 (true) if currently in compilation mode (sscomp flag is set), 0 (false) otherwise.
+*** compstat ( -- flag )
+*Description:* Checks the current compilation status. Pushes -1 (true) if currently in compilation mode (sscomp flag is set), 0 (false) otherwise. \\
 *Usage:* `compstat` (pushes compilation status)
 
----
-
-*** wisimmd ( xt \-\- flag )
-*Description:* Given an execution token (XT) of a word, it checks if that word is an immediate word. Pushes -1 (true) if immediate, 0 (false) otherwise.
+*** wisimmd ( xt -- flag )
+*Description:* Given an execution token (XT) of a word, it checks if that word is an immediate word. Pushes -1 (true) if immediate, 0 (false) otherwise. \\
 *Usage:* `' ; wisimmd` (stack: -1) `; ' DUP wisimmd` (stack: 0)
 
----
-
-*** here ( \-\- addr )
-*Description:* Pushes the current address of the "here" pointer, which is the next available memory location in the dictionary for compilation.
+*** here ( -- addr )
+*Description:* Pushes the current address of the "here" pointer, which is the next available memory location in the dictionary for compilation. \\
 *Usage:* `here` (pushes the current dictionary allocation pointer)
 
----
-
-*** romhere ( \-\- addr )
-*Description:* Pushes the current address of the "romhere" pointer, which is the next available memory location in ROM for compilation.
+*** romhere ( -- addr )
+*Description:* Pushes the current address of the "romhere" pointer, which is the next available memory location in ROM for compilation. \\
 *Usage:* `romhere` (pushes the current ROM allocation pointer)
 
----
-
-*** here@ ( \-\- addr )
-*Description:* Loads the current value of the here pointer (the next available dictionary address) onto the stack.
+*** here@ ( -- addr )
+*Description:* Loads the current value of the here pointer (the next available dictionary address) onto the stack. \\
 *Usage:* `here@` (pushes the value of here)
 
----
-
-*** here! ( addr \-\- )
-*Description:* Stores a new address into the here pointer, effectively changing where the next dictionary entry will be compiled.
+*** here! ( addr -- )
+*Description:* Stores a new address into the here pointer, effectively changing where the next dictionary entry will be compiled. \\
 *Usage:* `NEW_ADDR here!`
 
----
-
-*** , ( n \-\- )
-*Description:* Compiles the number `n` into the dictionary at the current here address and then increments here by cell size.
+*** , ( n -- )
+*Description:* Compiles the number `n` into the dictionary at the current here address and then increments here by cell size. \\
 *Usage:* `123 ,` (compiles 123 into the dictionary)
 
 ---
 
-*** nlenshift ( \-\- shift_value )
-*Description:* Pushes the value of nlen_shift (16) onto the stack. This is the bit position where the name length is stored in a word's header.
+*** nlenshift ( -- shift_value )
+*Description:* Pushes the value of nlen_shift (16) onto the stack. This is the bit position where the name length is stored in a word's header. \\
 *Usage:* `nlenshift` (stack: 16)
 
----
-
-*** cmove ( src_addr dest_addr u \-\- )
-*Description:* Moves `u` bytes from `src_addr` to `dest_addr`.
+*** cmove ( src_addr dest_addr u -- )
+*Description:* Moves `u` bytes from `src_addr` to `dest_addr`. \\
 *Usage:* `SOURCE_ADDR DEST_ADDR 10 cmove` (moves 10 bytes)
 
----
-
-*** move ( src_addr dest_addr u \-\- )
-*Description:* Moves `u` cells (32-bit words) from `src_addr` to `dest_addr`.
+*** move ( src_addr dest_addr u -- )
+*Description:* Moves `u` cells (32-bit words) from `src_addr` to `dest_addr`. \\
 *Usage:* `SOURCE_ADDR DEST_ADDR 5 move` (moves 5 cells)
 
----
-
-*** aligned ( addr \-\- aligned_addr )
-*Description:* Rounds the given `addr` up to the next addrsize (4-byte) boundary.
+*** aligned ( addr -- aligned_addr )
+*Description:* Rounds the given `addr` up to the next addrsize (4-byte) boundary. \\
 *Usage:* `5 aligned` (stack: 8) `; 4 aligned` (stack: 4)
 
----
-
-*** align ( \-\- )
-*Description:* Aligns the here pointer to the next addrsize (4-byte) boundary. This ensures that subsequent compiled words are properly aligned in memory.
+*** align ( -- )
+*Description:* Aligns the here pointer to the next addrsize (4-byte) boundary. This ensures that subsequent compiled words are properly aligned in memory. \\
 *Usage:* `align`
 
----
-
-*** wentr@ ( xt \-\- entry_addr )
-*Description:* Given an execution token (XT) of a word, it loads the entry address (address of its assembly code) from that word's code field.
+*** wentr@ ( xt -- entry_addr )
+*Description:* Given an execution token (XT) of a word, it loads the entry address (address of its assembly code) from that word's code field. \\
 *Usage:* `XT wentr@` (pushes the entry address of the word XT)
 
----
-
-*** newword ( addr u \-\- )
-*Description:* Creates a new word in the dictionary. It takes a string (`addr u`) as the word's name. It aligns here, sets the link and name length in the header, sets the latest pointer to the new word, reserves space for the code field (initially -1), copies the name, and aligns here again. This word is a low-level building block for defining new Forth words.
+*** newword ( addr u -- )
+*Description:* Creates a new word in the dictionary. It takes a string (`addr u`) as the word's name. It aligns here, sets the link and name length in the header, sets the latest pointer to the new word, reserves space for the code field (initially -1), copies the name, and aligns here again. This word is a low-level building block for defining new Forth words. \\
 *Usage:* `S" MYWORD" 6 newword` (creates a new dictionary entry for MYWORD)
 
----
-
-*** defword ( addr u \-\- )
-*Description:* Defines a new Forth word with the given name (`addr u`). It uses newword to create the dictionary entry, then sets the code field of the new word to point to the call word's entry point. This makes the new word a "colon definition" that will execute a sequence of other Forth words.
+*** defword ( addr u -- )
+*Description:* Defines a new Forth word with the given name (`addr u`). It uses newword to create the dictionary entry, then sets the code field of the new word to point to the call word's entry point. This makes the new word a "colon definition" that will execute a sequence of other Forth words. \\
 *Usage:* `S" MYWORD" 6 defword` (defines MYWORD as a colon definition)
 
 ---
 
-*** defconst ( addr u \-\- )
-*Description:* Defines a new Forth constant with the given name (`addr u`). It uses newword to create the dictionary entry, then sets the code field of the new constant to point to the doconst word's entry point.
+*** defconst ( addr u -- )
+*Description:* Defines a new Forth constant with the given name (`addr u`). It uses newword to create the dictionary entry, then sets the code field of the new constant to point to the doconst word's entry point. \\
 *Usage:* `S" MYCONST" 7 defconst` (defines MYCONST as a constant)
 
----
-
-*** constant ( n \-\- ) (followed by a name)
-*Description:* Defines a new constant. It expects a number `n` on the stack, then reads the next word from the input stream as the name for the constant. It then uses defconst and comma to create the constant in the dictionary.
+*** constant ( n -- ) (followed by a name)
+*Description:* Defines a new constant. It expects a number `n` on the stack, then reads the next word from the input stream as the name for the constant. It then uses defconst and comma to create the constant in the dictionary. \\
 *Usage:* `123 CONSTANT MYVALUE` (defines MYVALUE as a constant with value 123)
 
----
-
-*** : ( \-\- ) (followed by a name)
-*Description:* Begins a new colon definition. It reads the next word from the input stream as the name for the new definition, then uses defword to create the dictionary entry and enters compilation mode (compon). All subsequent words will be compiled into this definition until a `;` is encountered.
+*** : ( -- ) (followed by a name)
+*Description:* Begins a new colon definition. It reads the next word from the input stream as the name for the new definition, then uses defword to create the dictionary entry and enters compilation mode (compon). All subsequent words will be compiled into this definition until a `;` is encountered. \\
 *Usage:* `: MYWORD ... ;` (starts a new word definition)
 
----
-
-*** ; ( \-\- )
-*Description:* Ends a colon definition. It compiles the exit word into the current definition, then exits compilation mode (compoff). This is an immediate word.
+*** ; ( -- )
+*Description:* Ends a colon definition. It compiles the exit word into the current definition, then exits compilation mode (compoff). This is an immediate word. \\
 *Usage:* `: MYWORD ... ;` (ends a word definition)
 
 ---
 
-*** wbody@ ( xt \-\- body_addr )
-*Description:* Given an execution token (XT) of a word, it calculates and pushes the memory address of that word's "body" (the start of its compiled code or data, after the header and code field).
+*** wbody@ ( xt -- body_addr )
+*Description:* Given an execution token (XT) of a word, it calculates and pushes the memory address of that word's "body" (the start of its compiled code or data, after the header and code field). \\
 *Usage:* `XT wbody@` (pushes the body address of the word XT)
 
----
-
-*** task; ( \-\- ) (followed by a name)
-*Description:* Defines a new task. It behaves like a colon definition (`:` and `;`), but after the definition, it calls newtask to set up a new task context for the defined word. This is an immediate word.
+*** task; ( -- ) (followed by a name)
+*Description:* Defines a new task. It behaves like a colon definition (`:` and `;`), but after the definition, it calls newtask to set up a new task context for the defined word. This is an immediate word. \\
 *Usage:* `TASK: MYTASK ... ;` (defines a new task)
 
----
-
-*** if ( flag \-\- )
-*Description:* Used in compilation. It compiles a branch0 instruction into the current definition. If the `flag` on the stack (at runtime) is non-zero, execution proceeds to the code immediately following if. If flag is zero, execution jumps to a later address (to be filled by then). This is an immediate word.
+*** if ( flag -- )
+*Description:* Used in compilation. It compiles a branch0 instruction into the current definition. If the `flag` on the stack (at runtime) is non-zero, execution proceeds to the code immediately following if. If flag is zero, execution jumps to a later address (to be filled by then). This is an immediate word. \\
 *Usage:* `: MYWORD FLAG IF ... THEN ;`
 
 ---
 
-*** then ( branch_addr \-\- )
-*Description:* Used in compilation. It fills in the jump address for the preceding if or else word. This is an immediate word.
+*** then ( branch_addr -- )
+*Description:* Used in compilation. It fills in the jump address for the preceding if or else word. This is an immediate word. \\
 *Usage:* `: MYWORD FLAG IF ... THEN ;`
 
 ---
 
-*** begin ( \-\- loop_addr )
-*Description:* Used in compilation. It pushes the current here address onto the stack. This address marks the beginning of a loop structure. This is an immediate word.
+*** begin ( -- loop_addr )
+*Description:* Used in compilation. It pushes the current here address onto the stack. This address marks the beginning of a loop structure. This is an immediate word. \\
 *Usage:* `: MYWORD BEGIN ... UNTIL ;`
 
----
-
-*** until ( flag loop_addr \-\- )
-*Description:* Used in compilation. It compiles a branch0 instruction followed by the `loop_addr` (from begin). At runtime, if `flag` is zero, execution branches back to `loop_addr`. If flag is non-zero, the loop terminates. This is an immediate word.
+*** until ( flag loop_addr -- )
+*Description:* Used in compilation. It compiles a branch0 instruction followed by the `loop_addr` (from begin). At runtime, if `flag` is zero, execution branches back to `loop_addr`. If flag is non-zero, the loop terminates. This is an immediate word. \\
 *Usage:* `: MYWORD BEGIN ... FLAG UNTIL ;`
 
----
-
-*** ' (tick) ( "word" \-\- xt )
-*Description:* Reads the next word from the input stream and searches for it in the dictionary. If found, it pushes the execution token (XT) of that word onto the stack. If not found, it will likely cause an error (or push 0 depending on error handling).
+*** ' (tick) ( "word" -- xt )
+*Description:* Reads the next word from the input stream and searches for it in the dictionary. If found, it pushes the execution token (XT) of that word onto the stack. If not found, it will likely cause an error (or push 0 depending on error handling). \\
 *Usage:* `' DUP` (pushes the XT of the DUP word)
 
 ---
 
-*** dogon ( \-\- )
-*Description:* Turns on the Independent Watchdog (IWDG) timer. This will cause a system reset if the watchdog is not "fed" periodically.
+*** dogon ( -- )
+*Description:* Turns on the Independent Watchdog (IWDG) timer. This will cause a system reset if the watchdog is not "fed" periodically. \\
 *Usage:* `dogon`
 
----
-
-*** feedog ( \-\- )
-*Description:* "Feeds" the Independent Watchdog (IWDG) timer, preventing a system reset. This word should be called regularly if the watchdog is enabled.
+*** feedog ( -- )
+*Description:* "Feeds" the Independent Watchdog (IWDG) timer, preventing a system reset. This word should be called regularly if the watchdog is enabled. \\
 *Usage:* `feedog`
 
----
-
-*** systickon ( \-\- )
-*Description:* Configures and enables the SysTick timer to generate an interrupt every 1ms (based on a 48MHz clock and a prescaler).
+*** systickon ( -- )
+*Description:* Configures and enables the SysTick timer to generate an interrupt every 1ms (based on a 48MHz clock and a prescaler). \\
 *Usage:* `systickon`
 
----
-
-*** systickoff ( \-\- )
-*Description:* Disables the SysTick timer.
+*** systickoff ( -- )
+*Description:* Disables the SysTick timer. \\
 *Usage:* `systickoff`
 
 ---
 
-*** mscountl ( \-\- addr )
-*Description:* Pushes the memory address of the mscountl variable, which stores the lower 32 bits of a millisecond counter.
+*** mscountl ( -- addr )
+*Description:* Pushes the memory address of the mscountl variable, which stores the lower 32 bits of a millisecond counter. \\
 *Usage:* `mscountl`
 
 ---
 
-*** mscounth ( \-\- addr )
-*Description:* Pushes the memory address of the mscounth variable, which stores the upper 32 bits of a millisecond counter. Together with mscountl, this forms a 64-bit millisecond counter.
+*** mscounth ( -- addr )
+*Description:* Pushes the memory address of the mscounth variable, which stores the upper 32 bits of a millisecond counter. Together with mscountl, this forms a 64-bit millisecond counter. \\
 *Usage:* `mscounth`
 
----
-
-*** delay1ms ( \-\- )
-*Description:* Delays execution for approximately 1 millisecond by waiting for the mscountl to increment. It uses yield to allow other tasks to run during the delay.
+*** delay1ms ( -- )
+*Description:* Delays execution for approximately 1 millisecond by waiting for the mscountl to increment. It uses yield to allow other tasks to run during the delay. \\
 *Usage:* `delay1ms`
 
----
-
-*** delayms ( n \-\- )
-*Description:* Delays execution for `n` milliseconds. It repeatedly calls delay1ms and decrements `n` until the delay is complete.
+*** delayms ( n -- )
+*Description:* Delays execution for `n` milliseconds. It repeatedly calls delay1ms and decrements `n` until the delay is complete. \\
 *Usage:* `100 delayms` (delays for 100 milliseconds)
 
----
-
-*** irqcount ( \-\- addr )
-*Description:* Pushes the memory address of the irqcount variable, which is a counter incremented every time an interrupt occurs.
+*** irqcount ( -- addr )
+*Description:* Pushes the memory address of the irqcount variable, which is a counter incremented every time an interrupt occurs. \\
 *Usage:* `irqcount`
 
----
-
-*** motd ( \-\- )
-*Description:* Prints the "Message of the Day" (a banner with "ITC FORTH on CH32V003 (rv32ec)") to the console.
+*** motd ( -- )
+*Description:* Prints the "Message of the Day" (a banner with "ITC FORTH on CH32V003 (rv32ec)") to the console. \\
 *Usage:* `motd`
 
 ---
 
-*** . ( n \-\- )
-*Description:* Prints the top number `n` on the stack in hexadecimal format (using hex32).
+*** . ( n -- )
+*Description:* Prints the top number `n` on the stack in hexadecimal format (using hex32). \\
 *Usage:* `1234 .` (prints "000004D2")
 
----
-
-*** ? ( addr \-\- )
-*Description:* Loads the 32-bit value at `addr` and then prints it to the console in hexadecimal format (using `.` ).
+*** ? ( addr -- )
+*Description:* Loads the 32-bit value at `addr` and then prints it to the console in hexadecimal format (using `.` ). \\
 *Usage:* `ADDR ?` (prints the value stored at ADDR)
 
----
-
-*** ycount ( \-\- addr )
-*Description:* Pushes the memory address of the ycount variable, which is a counter incremented every time a yield operation occurs.
+*** ycount ( -- addr )
+*Description:* Pushes the memory address of the ycount variable, which is a counter incremented every time a yield operation occurs. \\
 *Usage:* `ycount`
 
----
-
-*** sysrst ( \-\- )
-*Description:* Initiates a system reset of the microcontroller.
+*** sysrst ( -- )
+*Description:* Initiates a system reset of the microcontroller. \\
 *Usage:* `sysrst` (resets the CH32V003)
 
----
-
-*** chipuid ( \-\- uid3 uid2 uid1 )
-*Description:* Reads and pushes the three 32-bit parts of the CH32V003's unique ID onto the stack.
+*** chipuid ( -- uid3 uid2 uid1 )
+*Description:* Reads and pushes the three 32-bit parts of the CH32V003's unique ID onto the stack. \\
 *Usage:* `chipuid` (stack: UID_PART3 UID_PART2 UID_PART1)
 
----
-
-*** romunlock ( \-\- )
-*Description:* Unlocks the Flash memory for programming/erasing operations by writing specific key sequences to the Flash Key Register.
+*** romunlock ( -- )
+*Description:* Unlocks the Flash memory for programming/erasing operations by writing specific key sequences to the Flash Key Register. \\
 *Usage:* `romunlock`
 
----
-
-*** romlock ( \-\- )
-*Description:* Locks the Flash memory, preventing further programming or erasing until romunlock is called again.
+*** romlock ( -- )
+*Description:* Locks the Flash memory, preventing further programming or erasing until romunlock is called again. \\
 *Usage:* `romlock`
 
----
-
-*** FLASH_BASE ( \-\- addr )
-*Description:* Pushes the base address of the Flash memory peripheral (0x40022000).
+*** FLASH_BASE ( -- addr )
+*Description:* Pushes the base address of the Flash memory peripheral (0x40022000). \\
 *Usage:* `FLASH_BASE`
 
----
-
-*** FLASH_STATR ( \-\- offset )
-*Description:* Pushes the offset of the Flash Status Register (0x0C) relative to FLASH_BASE.
+*** FLASH_STATR ( -- offset )
+*Description:* Pushes the offset of the Flash Status Register (0x0C) relative to FLASH_BASE. \\
 *Usage:* `FLASH_STATR`
 
----
-
-*** FLASH_BUSY ( \-\- bit_mask )
-*Description:* Pushes the bitmask for the Flash Busy flag (bit 0) in the Flash Status Register.
+*** FLASH_BUSY ( -- bit_mask )
+*Description:* Pushes the bitmask for the Flash Busy flag (bit 0) in the Flash Status Register. \\
 *Usage:* `FLASH_BUSY`
 
----
-
-*** rombusy ( \-\- flag )
-*Description:* Checks if the Flash memory is currently busy with a programming or erase operation. Pushes -1 (true) if busy, 0 (false) otherwise.
+*** rombusy ( -- flag )
+*Description:* Checks if the Flash memory is currently busy with a programming or erase operation. Pushes -1 (true) if busy, 0 (false) otherwise. \\
 *Usage:* `rombusy`
 
----
-
-*** FLASH_CTLR ( \-\- offset )
-*Description:* Pushes the offset of the Flash Control Register (0x10) relative to FLASH_BASE.
+*** FLASH_CTLR ( -- offset )
+*Description:* Pushes the offset of the Flash Control Register (0x10) relative to FLASH_BASE. \\
 *Usage:* `FLASH_CTLR`
 
 ---
 
-*** FLASH_PG ( \-\- bit_mask )
-*Description:* Pushes the bitmask for the Flash Programming bit (bit 0) in the Flash Control Register.
+*** FLASH_PG ( -- bit_mask )
+*Description:* Pushes the bitmask for the Flash Programming bit (bit 0) in the Flash Control Register. \\
 *Usage:* `FLASH_PG`
 
----
-
-*** romctlr@ ( \-\- value )
-*Description:* Loads the current value of the Flash Control Register.
+*** romctlr@ ( -- value )
+*Description:* Loads the current value of the Flash Control Register. \\
 *Usage:* `romctlr@`
 
----
-
-*** romctlr! ( value \-\- )
-*Description:* Stores a `value` into the Flash Control Register.
+*** romctlr! ( value -- )
+*Description:* Stores a `value` into the Flash Control Register. \\
 *Usage:* `NEW_VALUE romctlr!`
 
----
-
-*** rompgon ( \-\- )
-*Description:* Enables Flash programming mode by setting the FLASH_PG bit in the Flash Control Register.
+*** rompgon ( -- )
+*Description:* Enables Flash programming mode by setting the FLASH_PG bit in the Flash Control Register. \\
 *Usage:* `rompgon`
 
----
-
-*** rompgoff ( \-\- )
-*Description:* Disables Flash programming mode by clearing the FLASH_PG bit in the Flash Control Register.
+*** rompgoff ( -- )
+*Description:* Disables Flash programming mode by clearing the FLASH_PG bit in the Flash Control Register. \\
 *Usage:* `rompgoff`
 
----
-
-*** 16! ( value addr \-\- )
-*Description:* Stores a 16-bit `value` at the specified `addr`.
+*** 16! ( value addr -- )
+*Description:* Stores a 16-bit `value` at the specified `addr`. \\
 *Usage:* `0xABCD ADDR 16!`
 
 ---
 
-*** romwait ( \-\- )
-*Description:* Waits until the Flash memory is no longer busy with a programming or erase operation. It uses yield to allow other tasks to run.
+*** romwait ( -- )
+*Description:* Waits until the Flash memory is no longer busy with a programming or erase operation. It uses yield to allow other tasks to run. \\
 *Usage:* `romwait`
 
----
-
-*** rom16! ( value addr \-\- )
-*Description:* Stores a 16-bit `value` at the specified `addr` in Flash memory. It handles romwait before and after the write, and adjusts the address to be relative to CODE_FLASH_BASE.
+*** rom16! ( value addr -- )
+*Description:* Stores a 16-bit `value` at the specified `addr` in Flash memory. It handles romwait before and after the write, and adjusts the address to be relative to CODE_FLASH_BASE. \\
 *Usage:* `0xABCD FLASH_ADDR rom16!`
 
----
-
-*** rom32! ( value addr \-\- )
-*Description:* Stores a 32-bit `value` at the specified `addr` in Flash memory. It splits the 32-bit value into two 16-bit halves and uses rom16store for each, handling address increments.
+*** rom32! ( value addr -- )
+*Description:* Stores a 32-bit `value` at the specified `addr` in Flash memory. It splits the 32-bit value into two 16-bit halves and uses rom16store for each, handling address increments. \\
 *Usage:* `0xDEADBEEF FLASH_ADDR rom32!`
 
 ---
 
-*** FLASH_ADDR ( \-\- offset )
-*Description:* Pushes the offset of the Flash Address Register (0x14) relative to FLASH_BASE.
+*** FLASH_ADDR ( -- offset )
+*Description:* Pushes the offset of the Flash Address Register (0x14) relative to FLASH_BASE. \\
 *Usage:* `FLASH_ADDR`
 
----
-
-*** FLASH_PER ( \-\- bit_mask )
-*Description:* Pushes the bitmask for the Flash Page Erase bit (bit 1) in the Flash Control Register.
+*** FLASH_PER ( -- bit_mask )
+*Description:* Pushes the bitmask for the Flash Page Erase bit (bit 1) in the Flash Control Register. \\
 *Usage:* `FLASH_PER`
 
----
-
-*** FLASH_STRT ( \-\- bit_mask )
-*Description:* Pushes the bitmask for the Flash Start bit (bit 6) in the Flash Control Register, used to initiate programming/erase operations.
+*** FLASH_STRT ( -- bit_mask )
+*Description:* Pushes the bitmask for the Flash Start bit (bit 6) in the Flash Control Register, used to initiate programming/erase operations. \\
 *Usage:* `FLASH_STRT`
 
----
-
-*** rom1kerase ( addr \-\- )
-*Description:* Erases a 1KB page in Flash memory starting at the given `addr`. It handles unlocking, setting the erase bit, writing the address, initiating the erase, waiting for completion, and clearing the erase bit.
+*** rom1kerase ( addr -- )
+*Description:* Erases a 1KB page in Flash memory starting at the given `addr`. It handles unlocking, setting the erase bit, writing the address, initiating the erase, waiting for completion, and clearing the erase bit. \\
 *Usage:* `PAGE_ADDR rom1kerase`
 
 ---
 
-*** RAMBAK_ADDR ( \-\- addr )
-*Description:* Pushes the base address (0x3800) of the dedicated RAM backup area in Flash memory.
+*** RAMBAK_ADDR ( -- addr )
+*Description:* Pushes the base address (0x3800) of the dedicated RAM backup area in Flash memory. \\
 *Usage:* `RAMBAK_ADDR`
 
----
-
-*** rambakerase ( \-\- )
-*Description:* Erases the entire RAM backup area in Flash memory (two 1KB pages).
+*** rambakerase ( -- )
+*Description:* Erases the entire RAM backup area in Flash memory (two 1KB pages). \\
 *Usage:* `rambakerase`
 
----
-
-*** rambakload ( \-\- )
-*Description:* Loads data from the RAM backup area in Flash into RAM. It copies RAMBAK_SIZE bytes from RAMBAK_ADDR (in Flash) to RAM_ADDR (in RAM). After loading, it restores the task context using taskload.
+*** rambakload ( -- )
+*Description:* Loads data from the RAM backup area in Flash into RAM. It copies RAMBAK_SIZE bytes from RAMBAK_ADDR (in Flash) to RAM_ADDR (in RAM). After loading, it restores the task context using taskload. \\
 *Usage:* `rambakload`
 
----
-
-*** rambaksave ( \-\- )
-*Description:* Saves data from RAM to the RAM backup area in Flash. It first saves the current task context, then copies RAMBAK_SIZE bytes (16-bit words) from RAM_ADDR to RAMBAK_ADDR (in Flash).
+*** rambaksave ( -- )
+*Description:* Saves data from RAM to the RAM backup area in Flash. It first saves the current task context, then copies RAMBAK_SIZE bytes (16-bit words) from RAM_ADDR to RAMBAK_ADDR (in Flash). \\
 *Usage:* `rambaksave`
 
----
-
-*** tnp ( \-\- offset )
-*Description:* Pushes the offset of the tnp (next task pointer) field within a task structure.
+*** tnp ( -- offset )
+*Description:* Pushes the offset of the tnp (next task pointer) field within a task structure. \\
 *Usage:* `tnp`
 
----
-
-*** up@ ( \-\- addr )
-*Description:* Pushes the current value of the User Pointer (up) onto the data stack.
+*** up@ ( -- addr )
+*Description:* Pushes the current value of the User Pointer (up) onto the data stack. \\
 *Usage:* `up@`
 
 ---
 
-*** stksize ( \-\- n )
-*Description:* Pushes the constant value for the size of a data/return stack in cells (20).
+*** stksize ( -- n )
+*Description:* Pushes the constant value for the size of a data/return stack in cells (20). \\
 *Usage:* `stksize` (stack: 20)
 
----
-
-*** tasksize ( \-\- n )
-*Description:* Pushes the constant value for the size of a task structure in cells (8).
+*** tasksize ( -- n )
+*Description:* Pushes the constant value for the size of a task structure in cells (8). \\
 *Usage:* `tasksize` (stack: 8)
 
----
-
-*** newtask ( xt \-\- task_addr )
-*Description:* Creates a new task context. It allocates space for data and return stacks, then initializes a new task structure in the dictionary. The `xt` (execution token) provided on the stack is set as the new task's initial instruction pointer. It links the new task into the cooperative multitasking chain.
+*** newtask ( xt -- task_addr )
+*Description:* Creates a new task context. It allocates space for data and return stacks, then initializes a new task structure in the dictionary. The `xt` (execution token) provided on the stack is set as the new task's initial instruction pointer. It links the new task into the cooperative multitasking chain. \\
 *Usage:* `XT newtask` (creates a new task that will start executing at XT)
 
 ---
 
-*** allot ( n \-\- )
-*Description:* Reserves `n` cells (32-bit words) in the dictionary by incrementing the here pointer.
+*** allot ( n -- )
+*Description:* Reserves `n` cells (32-bit words) in the dictionary by incrementing the here pointer. \\
 *Usage:* `10 allot` (reserves 10 cells of memory)
 
----
-
-*** interpret ( \-\- )
+*** interpret ( -- )
 *Description:* The main Forth interpreter loop. It reads a token from the TIB.
     If >in is empty, it does nothing.
     If the token is found in the dictionary:
