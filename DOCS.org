@@ -1,10 +1,6 @@
 * Forth Words (Dictionary)
 
-  *fail* ( -- )
-  
-  Description: Prints "FAIL" to the console and enters an infinite loop, effectively halting execution.
-
-  Usage: `fail`
+*** fail *** ( -- )\\Description: Prints "FAIL" to the console and enters an infinite loop, effectively halting execution.\\Usage: `fail`
 
 ---
 
