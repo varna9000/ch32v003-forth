@@ -151,28 +151,28 @@ systickon
 *** Built-in LED is connected to PD1, which is also used for SWIO debug interface. We have to disable debug function of the pin before we can use the LED.
 
 #+BEGIN_SRC forth
-  ( set portD as push-pull )
+  ( set PORT D as push-pull )
   : dportset 0x40021018 @ 0x20 or 0x40021018 ! ;
 
   ( set clock on PORT D)
   : dclk 0x40011400 @ 0xFFFFFF0F and 0x60 or 0x40011400 ! ;
 
-   ( Disable Debug interface, which is connected to PD1 on this board )
+  ( Disable Debug interface, which is connected to PD1 on this board )
   : swdoff 0x40010004 @ 0x07000000 invert and 0x04000000 or 0x40010004 ! ;
 
-  ( set puiltin led opn PD1 high )
+  ( set built-in led on PD1 high )
   : ledon 0x4001140C @ 0xD and 0x4001140C ! ;
 
-  ( set puiltin led opn PD1 low )
+  ( set built-in led on PD1 low )
   : ledoff 0x4001140C @ 0x2 or 0x4001140C ! ;
 
-   ( general pd1 initi routine )
+  ( general PD1 init routine )
   : ledinit dportset dclk swdoff ;
 
-   ( blink pd1 led once )
+  ( blink built-in led on PD1 once )
   : blink systickon ledon 0x3E8 delayms ledoff 0x3E8 delayms systickoff ;
 
-   ( blink pd1 led 10 times )
+  ( blink built-in LED on PD1 10 times )
   : 10blink 0xA begin 1- blink dup 0= until ;
 
 #+END_SRC
